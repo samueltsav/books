@@ -1,0 +1,40 @@
+services:
+
+  db:
+    image: postgres
+    volumes:
+      - ./postgres_db/db:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      interval: 3s
+      timeout: 2s
+      retries: 3
+      start_period: 3s
+  
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "dotnet", "Utilities.HttpCheck.dll", "-t", "150"]
+      interval: 3s
+      timeout: 2s
+      retries: 3
+      start_period: 10s
+
+    depends_on:
+      - db
+
+volumes:
+  postgres_db:
