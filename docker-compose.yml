@@ -1,40 +1,31 @@
-services:
+version: '3.8'
 
-  db:
-    image: postgres
-    volumes:
-      - ./postgres_db/db:/var/lib/postgresql/data/
+services:
+  postgresdb:
+    image: postgres:16.2-alpine
+    restart: always 
     environment:
-      - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    healthcheck:
-      interval: 3s
-      timeout: 2s
-      retries: 3
-      start_period: 3s
-  
+      - POSTGRES_PASSWORD=postgres123
+      - POSTGRES_DB=postgres
+    ports:
+      - 5433:5432
+    volumes:
+      - postgres_db:/var/lib/postgresql/data/
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
-    environment:
-      - POSTGRES_NAME=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+    command: python /code/manage.py runserver 0.0.0.0:8080
     restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+      - POSTGRES_DB=postgres
     ports:
-      - "8000:8000"
-    healthcheck:
-      test: ["CMD", "dotnet", "Utilities.HttpCheck.dll", "-t", "150"]
-      interval: 3s
-      timeout: 2s
-      retries: 3
-      start_period: 10s
-
+      - 8080:8080
     depends_on:
-      - db
+      - postgresdb
 
-volumes:
+volumes: 
   postgres_db:
